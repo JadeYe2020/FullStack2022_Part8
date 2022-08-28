@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
+import Select from "react-select";
 import { ALL_AUTHORS, UPDATE_AUTHOR_BORN } from "../queries";
 
 const AuthorForm = (props) => {
@@ -7,13 +8,11 @@ const AuthorForm = (props) => {
     <div>
       <h3>Set Birthyear</h3>
       <form onSubmit={props.handleUpdate}>
-        <div>
-          name
-          <input
-            value={props.name}
-            onChange={({ target }) => props.setName(target.value)}
-          />
-        </div>
+        <Select
+          value={props.selectedOption}
+          onChange={props.setSelectedOption}
+          options={props.options}
+        />
         <div>
           born
           <input
@@ -28,7 +27,7 @@ const AuthorForm = (props) => {
 };
 
 const Authors = (props) => {
-  const [name, setName] = useState("");
+  const [selectedOption, setSelectedOption] = useState(null);
   const [born, setBorn] = useState("");
 
   const [updateAuthorBorn] = useMutation(UPDATE_AUTHOR_BORN, {
@@ -41,25 +40,34 @@ const Authors = (props) => {
   }
   const authors = result.data.allAuthors;
 
+  // for react-select
+  const options = authors.map((a) => {
+    return { value: a.name, label: a.name };
+  });
+
   if (!props.show) {
     return null;
   }
 
   const handleUpdate = (e) => {
     e.preventDefault();
+
     updateAuthorBorn({
-      variables: { name, setBornTo: Number(born) },
+      variables: { name: selectedOption.value, setBornTo: Number(born) },
     });
-    setName("");
+    setSelectedOption(null);
     setBorn("");
   };
 
   const propsOfAuthorForm = {
     handleUpdate,
-    name,
-    setName,
+    // name,
+    // setName,
     born,
     setBorn,
+    options,
+    selectedOption,
+    setSelectedOption,
   };
 
   return (
