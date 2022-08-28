@@ -166,7 +166,7 @@ const resolvers = {
     editAuthor: (root, args) => {
       const authorToUpdate = authors.find((a) => a.name === args.name);
       if (authorToUpdate) {
-        const updatedAuthor = { born: args.setBornTo, ...authorToUpdate };
+        const updatedAuthor = { ...authorToUpdate, born: args.setBornTo };
         authors = authors.map((a) =>
           a.name !== args.name ? a : updatedAuthor
         );
