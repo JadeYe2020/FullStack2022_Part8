@@ -1,5 +1,22 @@
-const { ApolloServer, gql } = require("apollo-server");
-const { v1: uuid } = require("uuid");
+require("dotenv").config();
+const { ApolloServer, UserInputError, gql } = require("apollo-server");
+const mongoose = require("mongoose");
+
+const Book = require("./models/book");
+const Author = require("./models/author");
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+console.log("connecting to", MONGODB_URI);
+
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => {
+    console.log("connected to MongoDB");
+  })
+  .catch((error) => {
+    console.log("error connection to MongoDB:", error.message);
+  });
 
 let authors = [
   {
@@ -97,14 +114,14 @@ const typeDefs = gql`
   type Author {
     name: String!
     born: Int
-    bookCount: Int!
+    bookCount: Int
     id: ID!
   }
 
   type Book {
     title: String!
     published: Int!
-    author: String!
+    author: Author!
     genres: [String!]!
     id: ID!
   }
@@ -153,14 +170,36 @@ const resolvers = {
   },
 
   Mutation: {
-    addBook: (root, args) => {
-      const newBook = { ...args, id: uuid() };
-      books = books.concat(newBook);
-      // If the author is not yet saved to the server, a new author is added to the system
-      if (!authors.find((a) => a.name === args.author)) {
-        authors = authors.concat({ name: args.author, id: uuid() });
+    addBook: async (root, args) => {
+      let newBooksAuthor = await Author.findOne({ name: args.author });
+      if (!newBooksAuthor) {
+        // add a new author
+        const newAuthor = new Author({ name: args.author });
+        try {
+          await newAuthor.save();
+          // authors = authors.concat(newAuthor);
+          newBooksAuthor = await Author.findOne({ name: args.author });
+        } catch (error) {
+          throw new UserInputError(error.message, {
+            invalidArgs: args,
+          });
+        }
       }
-      return newBook;
+      const newBook = new Book({ ...args, author: newBooksAuthor._id });
+
+      try {
+        await newBook.save();
+        // books = books.concat(newBook);
+        // // If the author is not yet saved to the server, a new author is added to the system
+        // if (!authors.find((a) => a.name === args.author)) {
+        //   authors = authors.concat({ name: args.author, id: uuid() });
+        // }
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
+      return newBook.populate("author");
     },
 
     editAuthor: (root, args) => {
