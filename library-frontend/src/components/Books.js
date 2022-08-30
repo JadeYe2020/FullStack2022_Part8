@@ -14,7 +14,6 @@ const Books = (props) => {
       books = booksResult.data.allBooks;
       if (genre) {
         books = books.filter((b) => {
-          console.log("each book", b);
           return b.genres.includes(genre);
         });
       }

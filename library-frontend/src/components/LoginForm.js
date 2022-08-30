@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useMutation } from "@apollo/client";
-import { LOGIN } from "../queries";
+import { useMutation, useQuery } from "@apollo/client";
+import { LOGIN, LOGGEDIN_USER } from "../queries";
 
-const LoginForm = ({ show, setError, setToken, setPage }) => {
+const LoginForm = ({ show, setError, setToken, setPage, setUser }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -11,14 +11,18 @@ const LoginForm = ({ show, setError, setToken, setPage }) => {
       setError(error.graphQLErrors[0].message);
     },
   });
+  const userResult = useQuery(LOGGEDIN_USER);
 
   useEffect(() => {
     if (result.data) {
       const token = result.data.login.value;
       setToken(token);
       localStorage.setItem("library-app-user-token", token);
+      if (userResult.data) {
+        setUser(userResult.data.me);
+      }
     }
-  }, [result.data]); // eslint-disable-line
+  }, [result.data, userResult.data]); // eslint-disable-line
 
   const submit = async (event) => {
     event.preventDefault();
