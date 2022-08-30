@@ -25,7 +25,26 @@ export const ALL_BOOKS = gql`
       author {
         name
       }
+      genres
     }
+  }
+`;
+export const GENRE_BOOKS = gql`
+  query genreBooks($genre: String) {
+    allBooks(genre: $genre) {
+      title
+      published
+      author {
+        name
+      }
+      genres
+    }
+  }
+`;
+
+export const ALL_GENRES = gql`
+  query {
+    allGenres
   }
 `;
 
