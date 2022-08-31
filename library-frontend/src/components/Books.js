@@ -1,26 +1,30 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@apollo/client";
+import { ApolloCache, useQuery, useApolloClient } from "@apollo/client";
 import { ALL_BOOKS, ALL_GENRES, GENRE_BOOKS } from "../queries";
 
-const Books = (props) => {
-  const [genre, setGenre] = useState(null);
+const Books = ({ show, genrePicked, setGenrePicked }) => {
+  const client = useApolloClient();
+
+  // const [genre, setGenre] = useState(null);
   const [booksToShow, setBooksToShow] = useState([]);
   const booksResult = useQuery(ALL_BOOKS);
   const genresResult = useQuery(ALL_GENRES);
-  const genreBookResult = useQuery(GENRE_BOOKS, { variables: { genre } });
+  const genreBookResult = useQuery(GENRE_BOOKS, {
+    variables: { genre: genrePicked },
+  });
 
   useEffect(() => {
     let books = [];
     if (booksResult.data) {
       books = booksResult.data.allBooks;
-      if (genre) {
+      if (genrePicked) {
         if (genreBookResult.data) {
           books = genreBookResult.data.allBooks;
         }
       }
     }
     setBooksToShow(books);
-  }, [booksResult.data, genreBookResult.data, genre]);
+  }, [booksResult.data, genreBookResult.data, genrePicked]);
 
   if (booksResult.loading || genresResult.loading || genreBookResult.loading) {
     return <div>loading</div>;
@@ -28,16 +32,21 @@ const Books = (props) => {
 
   const genres = genresResult.data.allGenres;
 
-  if (!props.show) {
+  const pickGenre = (genre) => {
+    client.resetStore();
+    setGenrePicked(genre);
+  };
+
+  if (!show) {
     return null;
   }
 
   return (
     <div>
       <h2>books</h2>
-      {genre ? (
+      {genrePicked ? (
         <div>
-          in genre <strong>{genre}</strong>
+          in genre <strong>{genrePicked}</strong>
         </div>
       ) : null}
       <div></div>
@@ -58,7 +67,7 @@ const Books = (props) => {
         </tbody>
       </table>
       {genres.map((g) => (
-        <button key={g} onClick={() => setGenre(g)}>
+        <button key={g} onClick={() => pickGenre(g)}>
           {g}
         </button>
       ))}

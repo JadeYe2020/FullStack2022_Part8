@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useMutation } from "@apollo/client";
+import { useMutation, gql } from "@apollo/client";
 
-import { ADD_BOOK, ALL_BOOKS, ALL_AUTHORS } from "../queries";
+import { ADD_BOOK, ALL_BOOKS, ALL_AUTHORS, GENRE_BOOKS } from "../queries";
 
 const NewBook = (props) => {
   const [title, setTitle] = useState("");
@@ -10,8 +10,36 @@ const NewBook = (props) => {
   const [genre, setGenre] = useState("");
   const [genres, setGenres] = useState([]);
 
+  const queriesToUpdate = gql`
+    query {
+      allGenres
+      allBooks {
+        title
+        published
+        author {
+          name
+        }
+        genres
+      }
+    }
+  `;
   const [createBook] = useMutation(ADD_BOOK, {
-    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
+    update: (cache, response) => {
+      cache.updateQuery(
+        { query: queriesToUpdate },
+        ({ allGenres, allBooks }) => {
+          response.data.addBook.genres.forEach((g) => {
+            if (!allGenres.includes(g)) {
+              allGenres = allGenres.concat(g);
+            }
+          });
+          return {
+            allBooks: allBooks.concat(response.data.addBook),
+            allGenres,
+          };
+        }
+      );
+    },
   });
 
   if (!props.show) {
@@ -31,6 +59,7 @@ const NewBook = (props) => {
     setGenres([]);
     setGenre("");
     props.setPage("books");
+    props.setGenrePicked("");
   };
 
   const addGenre = () => {

@@ -11,6 +11,7 @@ const App = () => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [page, setPage] = useState("authors");
+  const [genrePicked, setGenrePicked] = useState("");
 
   const client = useApolloClient();
 
@@ -43,9 +44,17 @@ const App = () => {
 
       <Authors show={page === "authors"} />
 
-      <Books show={page === "books"} />
+      <Books
+        show={page === "books"}
+        genrePicked={genrePicked}
+        setGenrePicked={setGenrePicked}
+      />
 
-      <NewBook show={page === "add"} setPage={setPage} />
+      <NewBook
+        show={page === "add"}
+        setPage={setPage}
+        setGenrePicked={setGenrePicked}
+      />
 
       <LoginForm
         show={page === "login"}
