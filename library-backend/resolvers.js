@@ -10,11 +10,18 @@ const User = require("./models/user");
 
 const resolvers = {
   Author: {
-    bookCount: (root) => books.filter((b) => b.author === root.name).length,
+    bookCount: (root) => {
+      if (!root.books) {
+        return null;
+      }
+
+      return root.books.length;
+    },
   },
 
   Query: {
     bookCount: async () => {
+      console.log("Book.find");
       const books = await Book.find({});
       return books.length;
     },
@@ -48,7 +55,7 @@ const resolvers = {
       return books;
     },
     allAuthors: async () => {
-      return Author.find({});
+      return Author.find({}).populate("books");
     },
     allGenres: async () => {
       const books = await Book.find({});
@@ -76,11 +83,9 @@ const resolvers = {
       let newBooksAuthor = await Author.findOne({ name: args.author });
       if (!newBooksAuthor) {
         // add a new author
-        const newAuthor = new Author({ name: args.author });
+        newBooksAuthor = new Author({ name: args.author });
         try {
-          await newAuthor.save();
-          // authors = authors.concat(newAuthor);
-          newBooksAuthor = await Author.findOne({ name: args.author });
+          await newBooksAuthor.save();
         } catch (error) {
           throw new UserInputError(error.message, {
             invalidArgs: args,
@@ -90,7 +95,22 @@ const resolvers = {
       const newBook = new Book({ ...args, author: newBooksAuthor._id });
 
       try {
-        await newBook.save();
+        const bookAdded = await newBook.save();
+        // add the book to the author object
+        if (newBooksAuthor.books) {
+          await Author.findByIdAndUpdate(
+            newBooksAuthor._id,
+            { books: newBooksAuthor.books.concat(bookAdded._id) },
+            { new: true, runValidators: true, context: "query" }
+          );
+        } else {
+          newBooksAuthor.books = [bookAdded._id];
+          await Author.findByIdAndUpdate(newBooksAuthor._id, newBooksAuthor, {
+            new: true,
+            runValidators: true,
+            context: "query",
+          });
+        }
       } catch (error) {
         throw new UserInputError(error.message, {
           invalidArgs: args,
