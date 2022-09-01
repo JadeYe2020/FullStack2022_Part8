@@ -21,7 +21,6 @@ const resolvers = {
 
   Query: {
     bookCount: async () => {
-      console.log("Book.find");
       const books = await Book.find({});
       return books.length;
     },

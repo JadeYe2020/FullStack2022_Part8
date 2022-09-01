@@ -61,8 +61,6 @@ const Authors = (props) => {
 
   const propsOfAuthorForm = {
     handleUpdate,
-    // name,
-    // setName,
     born,
     setBorn,
     options,
