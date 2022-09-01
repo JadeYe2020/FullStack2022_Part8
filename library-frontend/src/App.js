@@ -7,7 +7,15 @@ import NewBook from "./components/NewBook";
 import LoginForm from "./components/LoginForm";
 import Recommendation from "./components/Recommendation";
 
-import { BOOK_ADDED } from "./queries";
+import { BOOK_ADDED, ALL_BOOKS } from "./queries";
+
+export const updateCache = (cache, query, addedBook) => {
+  cache.updateQuery(query, ({ allBooks }) => {
+    return {
+      allBooks: allBooks.concat(addedBook),
+    };
+  });
+};
 
 const App = () => {
   const [token, setToken] = useState(null);
@@ -21,6 +29,7 @@ const App = () => {
     onSubscriptionData: ({ subscriptionData }) => {
       const addedBook = subscriptionData.data.bookAdded;
       window.alert(`${addedBook.title} added`);
+      updateCache(client.cache, { query: ALL_BOOKS }, addedBook);
     },
   });
 

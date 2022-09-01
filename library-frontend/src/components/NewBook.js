@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useMutation, gql } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 
-import { ADD_BOOK } from "../queries";
+import { ADD_BOOK, ALL_GENRES } from "../queries";
 
 const NewBook = (props) => {
   const [title, setTitle] = useState("");
@@ -10,35 +10,18 @@ const NewBook = (props) => {
   const [genre, setGenre] = useState("");
   const [genres, setGenres] = useState([]);
 
-  const queriesToUpdate = gql`
-    query {
-      allGenres
-      allBooks {
-        title
-        published
-        author {
-          name
-        }
-        genres
-      }
-    }
-  `;
   const [createBook] = useMutation(ADD_BOOK, {
     update: (cache, response) => {
-      cache.updateQuery(
-        { query: queriesToUpdate },
-        ({ allGenres, allBooks }) => {
-          response.data.addBook.genres.forEach((g) => {
-            if (!allGenres.includes(g)) {
-              allGenres = allGenres.concat(g);
-            }
-          });
-          return {
-            allBooks: allBooks.concat(response.data.addBook),
-            allGenres,
-          };
-        }
-      );
+      cache.updateQuery({ query: ALL_GENRES }, ({ allGenres }) => {
+        response.data.addBook.genres.forEach((g) => {
+          if (!allGenres.includes(g)) {
+            allGenres = allGenres.concat(g);
+          }
+        });
+        return {
+          allGenres,
+        };
+      });
     },
   });
 
@@ -58,8 +41,8 @@ const NewBook = (props) => {
     setAuthor("");
     setGenres([]);
     setGenre("");
-    props.setPage("books");
-    props.setGenrePicked("");
+    // props.setPage("books");
+    // props.setGenrePicked("");
   };
 
   const addGenre = () => {

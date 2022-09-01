@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { ApolloCache, useQuery, useApolloClient } from "@apollo/client";
+import { useQuery, useApolloClient } from "@apollo/client";
 import { ALL_BOOKS, ALL_GENRES, GENRE_BOOKS } from "../queries";
 
 const Books = ({ show, genrePicked, setGenrePicked }) => {
   const client = useApolloClient();
 
-  // const [genre, setGenre] = useState(null);
   const [booksToShow, setBooksToShow] = useState([]);
   const booksResult = useQuery(ALL_BOOKS);
   const genresResult = useQuery(ALL_GENRES);
@@ -66,6 +65,7 @@ const Books = ({ show, genrePicked, setGenrePicked }) => {
           ))}
         </tbody>
       </table>
+      <button onClick={() => pickGenre("")}>show all</button>
       {genres.map((g) => (
         <button key={g} onClick={() => pickGenre(g)}>
           {g}
